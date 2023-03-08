@@ -3,33 +3,51 @@ import numpy as np
 import cv2
 import time
 # # case 1
-img1 = cv2.imread('./images/simple/1.jpg') 
-img2 = cv2.imread('./images/simple/2.jpg')
+# img1 = cv2.imread('./images/simple/1.jpg') 
+# img2 = cv2.imread('./images/simple/2.jpg')
 
 # case 2
-# img1 = cv2.imread('./images/S1.jpg')
-# img2 = cv2.imread('./images/S2.jpg')
+img1 = cv2.imread('./images/S1.jpg')
+img2 = cv2.imread('./images/S2.jpg')
 
 
 start =time.time()
+def feature_points_surf():
+    surf = cv2.SIFT_create()
+    kp1,des1=surf.detectAndCompute(img1,None)  #查找关键点和描述符
+    kp2,des2=surf.detectAndCompute(img2,None)
+    
+    FLANN_INDEX_KDTREE=0   #建立FLANN匹配器的参数
+    indexParams=dict(algorithm=FLANN_INDEX_KDTREE,trees=10) #配置索引，密度树的数量为10
+    searchParams=dict(checks=50)    #指定递归次数
+    #FlannBasedMatcher：是目前最快的特征匹配算法（最近邻搜索）
+    flann=cv2.FlannBasedMatcher(indexParams,searchParams)  #建立匹配器
+    matches=flann.knnMatch(des1,des2,k=2)  #得出匹配的关键点
+    good=[]
+    #提取优秀的特征点
+    for m,n in matches:
+        if m.distance < 0.7*n.distance: #如果第一个邻近距离比第二个邻近距离的0.7倍小，则保留
+            good.append(m)
+    return good,kp1,kp2
 
-# surf = cv2.SIFT_create()
-surf = cv2.ORB_create()
-kp1,des1=surf.detectAndCompute(img1,None)  #查找关键点和描述符
-kp2,des2=surf.detectAndCompute(img2,None)
- 
-FLANN_INDEX_KDTREE=0   #建立FLANN匹配器的参数
-indexParams=dict(algorithm=FLANN_INDEX_KDTREE,trees=10) #配置索引，密度树的数量为10
-searchParams=dict(checks=50)    #指定递归次数
-#FlannBasedMatcher：是目前最快的特征匹配算法（最近邻搜索）
-flann=cv2.FlannBasedMatcher(indexParams,searchParams)  #建立匹配器
-matches=flann.knnMatch(des1,des2,k=2)  #得出匹配的关键点
- 
-good=[]
-#提取优秀的特征点
-for m,n in matches:
-    if m.distance < 0.7*n.distance: #如果第一个邻近距离比第二个邻近距离的0.7倍小，则保留
-        good.append(m)
+def feature_points_orb():
+    # 实例化ORB算子
+    orb = cv2.ORB_create()
+    kp1, des_1 = orb.detectAndCompute(img1, None)
+    kp2, des_2 = orb.detectAndCompute(img2, None)
+
+    # BFMatcher算子匹配
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = bf.match(des_1, des_2)
+    matches = sorted(matches, key=lambda x: x.distance)[:180]
+    return matches,kp1,kp2
+
+# features find surf
+good,kp1,kp2 = feature_points_surf()
+
+# featuers find orb
+# good,kp1,kp2 = feature_points_orb()
+
  
 src_pts = np.array([ kp1[m.queryIdx].pt for m in good])    #查询图像的特征描述子索引
 dst_pts = np.array([ kp2[m.trainIdx].pt for m in good])    #训练(模板)图像的特征描述子索引
