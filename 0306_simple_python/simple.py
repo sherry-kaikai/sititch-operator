@@ -12,7 +12,7 @@ img2 = cv2.imread('./images/S2.jpg')
 
 
 start =time.time()
-def feature_points_surf():
+def feature_points_sift():
     surf = cv2.SIFT_create()
     kp1,des1=surf.detectAndCompute(img1,None)  #查找关键点和描述符
     kp2,des2=surf.detectAndCompute(img2,None)
@@ -39,15 +39,27 @@ def feature_points_orb():
     # BFMatcher算子匹配
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = bf.match(des_1, des_2)
-    matches = sorted(matches, key=lambda x: x.distance)[:180]
+    matches = sorted(matches, key=lambda x: x.distance)#[:500]
     return matches,kp1,kp2
 
+def feature_points_akaze():
+    AKAZE = cv2.AKAZE_create()
+    kp1, des1 = AKAZE.detectAndCompute(img1, None)
+    kp2, des2 = AKAZE.detectAndCompute(img2, None)
+    matcher = cv2.BFMatcher(cv2.NORM_HAMMING)
+    matches_all = matcher.match(des1, des2)
+    return matches_all,kp1,kp2
+
 # features find surf
-good,kp1,kp2 = feature_points_surf()
+# good,kp1,kp2 = feature_points_sift()
 
 # featuers find orb
 # good,kp1,kp2 = feature_points_orb()
 
+# features find akaze
+good,kp1,kp2 = feature_points_akaze()
+
+print("feature find time:",time.time() - start)
  
 src_pts = np.array([ kp1[m.queryIdx].pt for m in good])    #查询图像的特征描述子索引
 dst_pts = np.array([ kp2[m.trainIdx].pt for m in good])    #训练(模板)图像的特征描述子索引
