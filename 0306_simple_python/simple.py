@@ -7,8 +7,8 @@ import time
 # img2 = cv2.imread('./images/simple/2.jpg')
 
 # case 2
-img1 = cv2.imread('./images/S1.jpg')
-img2 = cv2.imread('./images/S2.jpg')
+img1 = cv2.imread('/mnt/sdb/jingyu.lu/0306_stitch/stiching/0306_simple_python/images/S1.jpg')
+img2 = cv2.imread('/mnt/sdb/jingyu.lu/0306_stitch/stiching/0306_simple_python/images/S2.jpg')
 
 
 start =time.time()
@@ -47,7 +47,7 @@ def feature_points_akaze():
     kp1, des1 = AKAZE.detectAndCompute(img1, None)
     kp2, des2 = AKAZE.detectAndCompute(img2, None)
     matcher = cv2.BFMatcher(cv2.NORM_HAMMING)
-    matches_all = matcher.match(des1, des2)
+    matches_all = matcher.match(des1, des2) # cv2.Dmatch  distance 114 trainIdx 132
     return matches_all,kp1,kp2
 
 # features find surf
